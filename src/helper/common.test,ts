@@ -1,0 +1,71 @@
+// src/helper/common.test.ts
+import { cn, formatNumber } from './common';
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+// Mocking clsx and twMerge
+jest.mock('clsx', () => ({
+  clsx: jest.fn(),
+}));
+
+jest.mock('tailwind-merge', () => ({
+  twMerge: jest.fn(),
+}));
+
+describe('cn', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('combines class names correctly', () => {
+    (clsx as jest.Mock).mockReturnValue('foo bar');
+    (twMerge as jest.Mock).mockReturnValue('foo bar');
+
+    const result = cn('foo', 'bar');
+    expect(result).toBe('foo bar');
+    expect(clsx).toHaveBeenCalledWith(['foo', 'bar']);
+    expect(twMerge).toHaveBeenCalledWith('foo bar');
+  });
+
+  test('handles empty input', () => {
+    (clsx as jest.Mock).mockReturnValue('');
+    (twMerge as jest.Mock).mockReturnValue('');
+
+    const result = cn();
+    expect(result).toBe('');
+    expect(clsx).toHaveBeenCalledWith([]);
+    expect(twMerge).toHaveBeenCalledWith('');
+  });
+
+  test('handles conditional class names', () => {
+    (clsx as jest.Mock).mockReturnValue('foo baz');
+    (twMerge as jest.Mock).mockReturnValue('foo baz');
+
+    const result = cn('foo', false && 'bar', 'baz');
+    expect(result).toBe('foo baz');
+    expect(clsx).toHaveBeenCalledWith(['foo', false && 'bar', 'baz']);
+    expect(twMerge).toHaveBeenCalledWith('foo baz');
+  });
+});
+
+describe('formatNumber', () => {
+  test('formats number to given precision', () => {
+    expect(formatNumber(123.456, 2)).toBe('123.46');
+    expect(formatNumber(123.4, 2)).toBe('123.40');
+    expect(formatNumber(123, 2)).toBe('123.00');
+  });
+
+  test('handles negative numbers', () => {
+    expect(formatNumber(-123.456, 2)).toBe('-123.46');
+    expect(formatNumber(-123.4, 2)).toBe('-123.40');
+    expect(formatNumber(-123, 2)).toBe('-123.00');
+  });
+
+  test('handles large numbers', () => {
+    expect(formatNumber(123456789.123456, 3)).toBe('123456789.123');
+  });
+
+  test('handles small numbers', () => {
+    expect(formatNumber(0.000123456, 6)).toBe('0.000123');
+  });
+});
